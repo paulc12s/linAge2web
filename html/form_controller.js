@@ -19,9 +19,10 @@ const formConfig = {
         fields: [
             {
                 id: 'seqn',
-                type: 'number',
+                type: 'text',
                 label: 'Participant ID (SEQN)',
                 required: true,
+                pattern: '[0-9]+',
                 min: 1,
                 max: 99999,
                 help: 'Enter a unique 4-5 digit participant number'
@@ -38,9 +39,10 @@ const formConfig = {
             },
             {
                 id: 'age',
-                type: 'number',
+                type: 'text',
                 label: 'Age in months (RIDAGEEX)',
                 required: true,
+                pattern: '[0-9]+',
                 min: 240,
                 max: 1020,
                 help: 'Age range: 20-85 years (240-1020 months). Example: 30 years = 360 months'
@@ -93,8 +95,10 @@ const formConfig = {
             },
             {
                 id: 'huq050',
-                type: 'number',
+                type: 'text',
                 label: 'Number of healthcare visits in past year (HUQ050)',
+                required: false,
+                pattern: '[0-9]+',
                 min: 0,
                 max: 76,
                 help: 'Enter 0-76, or 77=Refused, 99=Don\'t know'
@@ -494,10 +498,6 @@ class NHANESFormController {
             return;
         }
 
-        // Verify CSV was actually generated
-        const csvContent = document.getElementById('csvOutput').value;
-        console.log('CSV generated, length:', csvContent.length);
-
         const calculateBtn = document.getElementById('calculateBtn');
         const resultSection = document.getElementById('linage2Result');
 
@@ -581,14 +581,38 @@ class NHANESFormController {
                 errors.push(field.name);
             } else {
                 field.classList.remove('field-error');
+
+                // Custom validation for text-type numeric fields
+                if (field.name === 'age') {
+                    const ageValue = parseInt(field.value, 10);
+                    if (isNaN(ageValue) || ageValue < 240 || ageValue > 1020) {
+                        isValid = false;
+                        field.classList.add('field-error');
+                        errors.push('age (must be 240-1020 months)');
+                    }
+                }
+                if (field.name === 'seqn') {
+                    const seqnValue = parseInt(field.value, 10);
+                    if (isNaN(seqnValue) || seqnValue < 1 || seqnValue > 99999) {
+                        isValid = false;
+                        field.classList.add('field-error');
+                        errors.push('seqn (must be 1-99999)');
+                    }
+                }
+                if (field.name === 'huq050' && field.value) {
+                    const huq050Value = parseInt(field.value, 10);
+                    if (isNaN(huq050Value) || huq050Value < 0 || huq050Value > 99) {
+                        isValid = false;
+                        field.classList.add('field-error');
+                        errors.push('huq050 (must be 0-99)');
+                    }
+                }
             }
         });
 
         if (!silent) {
             if (!isValid) {
                 alert(`Please complete all required fields. Missing: ${errors.join(', ')}`);
-            } else {
-                alert('Form is valid! You can now generate CSV.');
             }
         } else if (!isValid) {
             // In silent mode, still alert for errors

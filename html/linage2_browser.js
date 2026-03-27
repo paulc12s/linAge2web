@@ -14,7 +14,7 @@ import {
   runLinAge2,
   buildNumericTable,
   buildStringTable,
-} from "./linage2_core.js?v=10";
+} from "./linage2_core.js";
 
 // ============================================================================
 // DATA LOADING
